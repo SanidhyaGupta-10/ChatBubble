@@ -23,9 +23,8 @@ export const protectedRoute = [
             req.userId =  user._id.toString();
         } catch (error) {
             console.log(error);
-            res.status(500).json({
-                message: "Internal Server Error",
-            });
+            res.status(500);
+            next(error);
         };
     }
 ];
