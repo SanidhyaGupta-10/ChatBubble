@@ -28,4 +28,4 @@ ENV PORT=3000
 ENV NODE_ENV=production
 
 # start the application
-CMD ["bun", "server.ts"]
+CMD ["bun", "run", "server.ts"]

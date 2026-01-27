@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch server.ts",
+    "dev": "bun -r dotenv/config --watch server.ts",
     "start": "bun index.ts",
     "build": "bun install"
   },

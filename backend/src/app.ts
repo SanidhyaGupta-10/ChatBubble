@@ -7,6 +7,11 @@ import messageRoutes from './routes/message.route';
 import userRoutes from './routes/user.route';
 import { clerkMiddleware } from '@clerk/express';
 import { errorHandler } from './middlewares/errorHandler.middleware';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 const app = express();
 const PORT = process.env.PORT || 3000
@@ -17,7 +22,11 @@ app.use(express.json());
 
 app.use(clerkMiddleware());
 
-
+app.get('/user', (req, res) => {
+    res.json({
+        message: "Hello World",
+    })
+})
 
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
@@ -27,12 +36,15 @@ app.use('/api/users', userRoutes);
 app.use(errorHandler);
 
 // serve frontend in production
-if(process.env.NODE_ENV === 'production'){
-    app.use(express.static(path.join(__dirname, '../../web/dist')));
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, '../../web/dist');
 
-    app.get("/{*any}", (req, res) => {
-        res.sendFile(path.join(__dirname, '../../web/dist/index.html'));
-    });
+  app.use(express.static(distPath));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
 }
+
 
 export default app;
