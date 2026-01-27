@@ -40,10 +40,12 @@ if (process.env.NODE_ENV === 'production') {
 
   app.use(express.static(distPath));
 
-  app.get('/*', (req, res) => {
+  // Express 5 compatible catch-all
+  app.get(/.*/, (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
+
 
 app.use(errorHandler);
 
