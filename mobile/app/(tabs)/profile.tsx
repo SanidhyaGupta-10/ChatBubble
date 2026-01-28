@@ -1,10 +1,21 @@
-import { View, Text } from 'react-native'
+import { useAuth } from '@clerk/clerk-expo'
+import { View, Text, ScrollView, Pressable } from 'react-native'
 
 const ProfileTab = () => {
+  const { signOut} = useAuth();
+
   return (
-    <View>
-      <Text>profile</Text>
-    </View>
+     <ScrollView className='bg-surface'
+        contentInsetAdjustmentBehavior='automatic'
+       >
+         <Text className='text-white'>ProfileTab</Text>
+         <Pressable 
+          onPress={() => signOut()}
+          className='mt-4 bg-red-600 px-4 py-2 rounded-lg'
+          >
+            <Text>Sign Out</Text>
+          </Pressable>
+       </ScrollView>
   )
 }
 
