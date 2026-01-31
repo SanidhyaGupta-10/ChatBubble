@@ -10,8 +10,9 @@ import { BlurView } from 'expo-blur';
 const { width, height } = Dimensions.get('window')
 
 const AuthScreen = () => {
-
+  
   const { handleSocialAuth, loadingStrategy } = useAuthSocial();
+
 
   return (
     <View className='flex-1 bg-surface-dark'>
