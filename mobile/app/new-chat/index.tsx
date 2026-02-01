@@ -1,13 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
+// External Imports
 import { router } from "expo-router";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
+import { ActivityIndicator } from "react-native";
+
+// Internal Imports
 import { useUsers } from "@/hooks/useUsers";
 import { useGetOrCreateChats } from "@/hooks/useChats";
 import { User } from "@/types";
-import { ActivityIndicator } from "react-native";
 import UserItem from "@/components/UserItem";
+import { Ionicons } from "@expo/vector-icons";
 
 
 const NewChatScreen = () => {
