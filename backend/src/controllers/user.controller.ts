@@ -6,7 +6,7 @@ export async function getUsers(req: AuthRequest, res: Response, next: NextFuncti
     try {
         const userId = req.userId;
 
-        const users = User.find({_id: {$ne: userId}})
+        const users = await User.find({_id: {$ne: userId}})
         .select("name email avatar")
         .limit(50)
 
