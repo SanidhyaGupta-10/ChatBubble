@@ -23,7 +23,7 @@ const ChatSchema = new Schema<IChat>({
     },
     lastMessageAt: {
         type: Date,
-        default: Date.now(),
+        default: Date.now,
     }
 }, {
     timestamps: true,

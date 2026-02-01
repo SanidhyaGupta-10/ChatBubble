@@ -26,7 +26,7 @@ function EmptyUI({
       <Text className="text-muted-foreground text-lg mt-4">{title}</Text>
       {subtitle ? <Text className="text-subtle-foreground text-sm mt-1">{subtitle}</Text> : null}
       {buttonLabel && onPressButton ? (
-        <Pressable className="mt-6 bg-primary px-6 py-3 rounded-full" onPress={onPressButton}>
+        <Pressable className="mt-6 bg-primary  text-white px-6 py-3 rounded-full" onPress={onPressButton}>
           <Text className="text-surface-dark font-semibold">{buttonLabel}</Text>
         </Pressable>
       ) : null}

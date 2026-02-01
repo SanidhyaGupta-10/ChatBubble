@@ -21,6 +21,7 @@ export const protectedRoute = [
             });
 
             req.userId =  user._id.toString();
+            next();
         } catch (error) {
             console.log(error);
             res.status(500);
