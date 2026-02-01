@@ -9,12 +9,16 @@ const ChatItem = ({ chat, onPress }: { chat: Chat, onPress: () => void }) => {
     const isTyping = false;
     const hasUnread = false;
 
+    if (!participant) {
+        return null;
+    }
+
     return (
         <Pressable className='flex-row items-center justify-between py-3 active:opacity-70' onPress={onPress}>
             {/* Avatar & online indicator */}
             <View className='relative'>
                 <Image 
-                    source={ participant.avatar}
+                    source={{ uri: participant.avatar }}
                     style={{ width: 56, height: 56, borderRadius: 999 }}
                 />
 

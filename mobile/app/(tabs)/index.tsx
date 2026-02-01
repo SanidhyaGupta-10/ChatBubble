@@ -43,14 +43,13 @@ const ChatsTab = () => {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1  bg-surface">
       <FlatList
-        data={chats}
+        data={chats ?? []}
         keyExtractor={(item) => item._id}
-        renderItem={({ item }) => <ChatItem chat={item} onPress={() => handleChatPress(item)} />}
-        showsVerticalScrollIndicator={false}
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 }}
+        renderItem={({ item }) => (
+          <ChatItem chat={item} onPress={() => handleChatPress(item)} />
+        )}
         ListHeaderComponent={<Header />}
         ListEmptyComponent={
           <EmptyUI
@@ -59,12 +58,20 @@ const ChatsTab = () => {
             iconName="chatbubbles-outline"
             iconColor="#6B6B70"
             iconSize={64}
-            buttonLabel="New Chat"
-            // todo: fix this later
-            onPressButton={() => console.log("pressed")}
+            buttonLabel="Start Chat"
+            onPressButton={() => router.push("/new-chat")}
           />
+
         }
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 16,
+          paddingBottom: 24,
+          flexGrow: 1,
+        }}
+        showsVerticalScrollIndicator={false}
       />
+
     </View>
   );
 };
@@ -75,12 +82,12 @@ function Header() {
   const router = useRouter();
 
   return (
-    <View className="px-5 pt-2 pb-4">
+    <View className="px-5 pt-6 pb-4">
       <View className="flex-row items-center justify-between">
         <Text className="text-2xl font-bold text-foreground">Chats</Text>
         <Pressable
           className="size-10 bg-primary rounded-full items-center justify-center"
-          // onPress={() => router.push("/new-chat")}
+          onPress={() => router.push("/new-chat")}
         >
           <Ionicons name="create-outline" size={20} color="#0D0D0F" />
         </Pressable>
