@@ -6,6 +6,9 @@ import { useState } from "react";
 import { useUsers } from "@/hooks/useUsers";
 import { useGetOrCreateChats } from "@/hooks/useChats";
 import { User } from "@/types";
+import { ActivityIndicator } from "react-native";
+import UserItem from "@/components/UserItem";
+
 
 const NewChatScreen = () => {
     const [searchQuery, setSearchQuery] = useState("");
@@ -23,7 +26,15 @@ const NewChatScreen = () => {
     const handleUserSelect = (user: User) => {
         getOrCreateChat(user._id, {
             onSuccess: (chat) => {
-
+                router.push({
+                    pathname: "/chat/[id]",
+                    params: {
+                        id: chat._id,
+                        participantId: chat.participant._id,
+                        name: chat.participant.name,
+                        avatar: chat.participant.avatar,
+                    },
+                });
             },
         });
     }
@@ -101,7 +112,7 @@ const NewChatScreen = () => {
                                     <UserItem
                                         key={user._id}
                                         user={user}
-                                        isOnline={onlineUsers.has(user._id)}
+                                        isOnline={true}
                                         onPress={() => handleUserSelect(user)}
                                     />
                                 ))}
