@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun -r dotenv/config --watch server.ts",
     "start": "bun index.ts",
-    "build": "bun install"
+    "build": "bun install",
+    "seed": "bun src/scripts/seed.script.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"

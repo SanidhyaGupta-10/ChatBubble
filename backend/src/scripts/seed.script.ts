@@ -66,7 +66,7 @@ const SEED_USERS = [
 
 async function seed() {
   try {
-    const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017/chat-app";
+    const mongoURI = process.env.MONGODB_URI!;
     await mongoose.connect(mongoURI);
     console.log("✅ Connected to MongoDB");
 
