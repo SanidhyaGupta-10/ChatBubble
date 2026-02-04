@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import cors from 'cors';
 
 import authRoutes from './routes/auth.route';
 import chatRoutes from './routes/chat.route';
@@ -16,7 +17,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000
 
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:8081',
+    process.env.FRONTEND_URL!
+].filter(Boolean);
 
+app.use(cors(
+  {
+    origin: allowedOrigins,
+    credentials: true, // for cookies and other credentials;
+  }
+))
 app.use(express.json());
 // Middleware that integrates Clerk authentication into your Express application. It checks the request's cookies and headers for a session JWT and, if found, attaches the Auth object to the request object under the auth key.
 
