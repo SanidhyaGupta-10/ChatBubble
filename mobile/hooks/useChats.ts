@@ -29,7 +29,7 @@ export const useGetOrCreateChats = () => {
     mutationFn: async (participantId: string) => {
       const { data } = await apiWithAuth<Chat>({
         method: "POST",
-        url: `/chats/with/${participantId}`,
+        url: `/chat/with/${participantId}`,
       });
       return data;
     },
