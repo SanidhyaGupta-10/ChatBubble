@@ -27,17 +27,20 @@ export async function authCallback(req: Request, res: Response, next: NextFuncti
         const { userId: clerkId } = getAuth(req);
 
         if (!clerkId) {
-            res.status(401).json({
-                message: "Unauthorized",
+            console.error("❌ No clerkId in auth");
+            return res.status(401).json({
+                message: "Unauthorized - No Clerk ID found",
             });
-            return;
-        };
+        }
 
+        console.log(`📌 Auth callback for clerkId: ${clerkId}`);
+        
         let user = await User.findOne({ clerkId });
 
         if (!user) {
+            console.log(`👤 New user detected, creating from Clerk...`);
             // get user info from clerk to save in db
-            const clerkUser = await clerkClient.users.getUser(clerkId)
+            const clerkUser = await clerkClient.users.getUser(clerkId);
 
             user = await User.create({
                 clerkId,
@@ -47,11 +50,18 @@ export async function authCallback(req: Request, res: Response, next: NextFuncti
                 email: clerkUser.emailAddresses[0]?.emailAddress,
                 avatar: clerkUser.imageUrl,
             });
-        };
+            console.log(`✅ User created: ${user.name}`);
+        } else {
+            console.log(`✅ User found: ${user.name}`);
+        }
 
-        res.json(user)
+        res.json(user);
     } catch (error) {
-        res.status(500);
+        console.error("❌ Auth callback error:", error);
+        res.status(500).json({
+            message: "Auth callback failed",
+            details: error instanceof Error ? error.message : "Unknown error"
+        });
         next(error);
-    };
-}
+    }
+};

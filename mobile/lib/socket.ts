@@ -4,7 +4,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Chat, Message, MessageSender } from "@/types";
 import * as Sentry from "@sentry/react-native";
 
-const SOCKET_URL = "https://chatbubble-production.up.railway.app";
+const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
 interface SocketState {
   socket: Socket | null;

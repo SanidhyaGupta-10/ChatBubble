@@ -9,7 +9,7 @@ function useUserSync() {
     const { mutate: syncUser, isPending, isSuccess } =  useMutation({
         mutationFn: async () => {
             const token = await getToken();
-            const res = await api.post('/api/callback', {}, {
+            const res = await api.post('/api/auth/callback', {}, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

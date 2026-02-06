@@ -1,5 +1,5 @@
-import { useAuth, UserButton } from "@clerk/clerk-react"
-import { act, useEffect, useRef, useState } from "react";
+import { UserButton } from "@clerk/clerk-react"
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useSocketStore } from "../lib/socket";
 import { useSocketConnection } from "../hooks/useSocketConnection";
@@ -9,15 +9,19 @@ import { useCurrentUser } from "../hooks/useCurrentUser";
 import { Link, MessageSquareIcon, PlusIcon, SparklesIcon } from "lucide-react";
 import { ChatListItem } from "../components/ChatListItem";
 import { ChatHeader } from "../components/ChatHeader";
+import { MessageBubble } from "../components/MessageBubble";
+import { ChatInput } from "../components/ChatInput";
+import { NewChatModal } from "../components/NewChatModal";
+
 
 function ChatPage() {
-  const { signOut } = useAuth();
   const { data: currentUser } = useCurrentUser();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const activeChatId = searchParams.get("chat") ?? "";
 
   const [messageInput, setMessageInput] = useState("");
+  const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -26,7 +30,7 @@ function ChatPage() {
     socket,
     setTyping,
     sendMessage
-  } = useSocketStore()
+  } = useSocketStore();
 
   useSocketConnection(activeChatId);
 
@@ -122,16 +126,41 @@ function ChatPage() {
       {/* Chat Window */}
       <div className="flex-1 flex flex-col">
         {/* Chat Header */}
-         {activeChatId && activeChat ? (
+        {activeChatId && activeChat ? (
           <>
-           <ChatHeader participant={activeChat.participant} chatId={activeChat._id}/>
+            <ChatHeader participant={activeChat.participant} chatId={activeChat} />
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              
+              {messagesLoading && (
+                <div className="flex items-center justify-center h-full">
+                  <span className="loading loading-spinner loading-md text-amber-400" />
+                </div>
+              )}
+
+              {messages.length === 0 && <NoMessagesUI />}
+
+              {messages.length > 0 && (
+                messages.map((msg: any) => <MessageBubble key={msg._id} message={msg} currentUser={currentUser} />)
+              )}
+              <div ref={messagesEndRef} />
             </div>
+
+            <ChatInput
+              value={messageInput}
+              onChange={handleTyping}
+              onSend={handleSend}
+              disabled={!messageInput.trim()}
+            />
           </>
-         ): <NoChatSelectedUI />}
+        ) : <NoChatSelectedUI />}
       </div>
+
+      <NewChatModal 
+        onStartChat={handleStartChat}
+        isPending={startChatMutation.isPending}
+        isOpen={isNewChatModalOpen}
+        onClose={() => setIsNewChatModalOpen(false)}
+      />
     </div>
 
   )
