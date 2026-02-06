@@ -21,11 +21,11 @@ export const useGetOrCreateChat = () => {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (participantId) => {
+  return useMutation<any, Error, string>({
+    mutationFn: async (participantId: string) => {
       const token = await getToken();
       const res = await api.post(
-        `/chats/with/${participantId}`,
+        `/chat/with/${participantId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
