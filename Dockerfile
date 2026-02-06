@@ -11,8 +11,8 @@ COPY web/ ./
 
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
-# ARG VITE_API_URL
-# ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 RUN bun run build
 
 # install backend dependencies
@@ -28,4 +28,4 @@ ENV PORT=3000
 ENV NODE_ENV=production
 
 # start the application
-CMD ["bun", "run", "server.ts"]
+CMD ["bun", "index.ts"]
