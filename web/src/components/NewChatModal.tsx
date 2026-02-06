@@ -25,7 +25,8 @@ export function NewChatModal({
 }: NewChatModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { onlineUsers } = useSocketStore();
-  const { data: allUsers = [], isLoading, isError, error } = useUsers();
+  const { data, isLoading, isError, error } = useUsers();
+  const allUsers = data?.users || [];
   const isOnline = (id: string) => onlineUsers.has(id);
 
   const handleStartChat = (participantId: string) => {

@@ -12,10 +12,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const NewChatScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: allUsers, isLoading } = useUsers();
+  const { data, isLoading } = useUsers();
   const { mutate: getOrCreateChat, isPending: isCreatingChat } = useGetOrCreateChats();
 
   // client-side filtering
+  const allUsers = data?.users || [];
   const users = allUsers?.filter((u) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
