@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "bun -r dotenv/config --watch server.ts",
-    "start": "bun index.ts",
+    "start": "bun server.ts",
     "build": "bun install",
     "seed": "bun src/scripts/seed.script.ts"
   },
