@@ -1,21 +1,37 @@
 import type { NextFunction, Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
-import Chat from "../models/Chat.model";
-import { Types } from "mongoose";
+import prisma from "../config/prisma";
 
 export async function getChats(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-        const userId = req.userId;
-        const chats = await Chat.find({ participants: userId })
-            .populate("participants", "name email avatar")
-            .populate("lastMessage")
-            .sort({ lastMessageAt: -1 });
+        const userId = req.userId as string;
+        const chats = await prisma.chat.findMany({
+            where: {
+                participants: {
+                    some: { id: userId }
+                }
+            },
+            include: {
+                participants: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        avatar: true
+                    }
+                },
+                lastMessage: true
+            },
+            orderBy: {
+                lastMessageAt: 'desc'
+            }
+        });
 
         const formattedChats = chats.map(chat => {
-            const otherParticipant = chat.participants.find(p => p._id.toString() !== userId);
+            const otherParticipant = chat.participants.find(p => p.id !== userId);
 
             return {
-                _id: chat._id,
+                id: chat.id,
                 participant: otherParticipant ?? null,
                 lastMessage: chat.lastMessage,
                 lastMessageAt: chat.lastMessageAt,
@@ -31,18 +47,12 @@ export async function getChats(req: AuthRequest, res: Response, next: NextFuncti
 
 export async function getOrCreateChat(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-        const userId = req.userId;
-        const { participantId } = req.params;
+        const userId = req.userId as string;
+        const participantId = req.params.participantId as string;
 
         if(!participantId){
             res.status(400).json({
                 message: "Participant id is required"
-            });
-            return;
-        }
-        if(!Types.ObjectId.isValid(participantId as string)){
-            res.status(400).json({
-                message: "Invalid participant id"
             });
             return;
         }
@@ -53,24 +63,56 @@ export async function getOrCreateChat(req: AuthRequest, res: Response, next: Nex
             });
             return;
         }
-        let chat = await Chat.findOne({
-            participants: { $all: [userId, participantId] },
-        })
-            .populate("participants", "name email avatar")
-            .populate("lastMessage");
+
+        // Find chat with both participants
+        let chat = await prisma.chat.findFirst({
+            where: {
+                AND: [
+                    { participants: { some: { id: userId } } },
+                    { participants: { some: { id: participantId } } }
+                ]
+            },
+            include: {
+                participants: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        avatar: true
+                    }
+                },
+                lastMessage: true
+            }
+        });
 
         if (!chat) {
-            const newChat = await new Chat({
-                participants: [userId, participantId]
+            chat = await prisma.chat.create({
+                data: {
+                    participants: {
+                        connect: [
+                            { id: userId },
+                            { id: participantId }
+                        ]
+                    }
+                },
+                include: {
+                    participants: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            avatar: true
+                        }
+                    },
+                    lastMessage: true
+                }
             });
-            await newChat.save();
-            chat = await newChat.populate("participants", "name email avatar");
-
         }
-        const otherParticipant = chat.participants.find(p => p._id.toString() !== userId);
+
+        const otherParticipant = chat.participants.find(p => p.id !== userId);
 
         res.json({
-            _id: chat._id,
+            id: chat.id,
             participant: otherParticipant ?? null,
             lastMessage: chat.lastMessage,
             lastMessageAt: chat.lastMessageAt,

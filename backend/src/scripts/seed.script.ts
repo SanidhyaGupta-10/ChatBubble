@@ -1,5 +1,4 @@
-import mongoose from "mongoose";
-import User from "../models/User.model";
+import prisma from "../config/prisma";
 
 const SEED_USERS = [
   {
@@ -66,18 +65,15 @@ const SEED_USERS = [
 
 async function seed() {
   try {
-    const mongoURI = process.env.MONGODB_URI!;
-    await mongoose.connect(mongoURI);
-    console.log("✅ Connected to MongoDB");
+    console.log("🌱 Seeding database...");
 
     // Insert seed users
-    const users = await User.insertMany(SEED_USERS);
-    console.log(`🌱 Seeded ${users.length} users:`);
-    users.forEach((user) => {
-      console.log(`   - ${user.name} (${user.email})`);
+    const result = await prisma.user.createMany({
+        data: SEED_USERS,
+        skipDuplicates: true
     });
 
-    await mongoose.disconnect();
+    console.log(`✅ Seeded ${result.count} users.`);
     console.log("✅ Done!");
     process.exit(0);
   } catch (error) {

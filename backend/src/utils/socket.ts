@@ -1,9 +1,7 @@
 import { Socket, Server as SocketServer } from "socket.io";
 import { Server as HttpServer } from "http";
 import { verifyToken } from "@clerk/express";
-import Chat  from '../models/Chat.model';
-import User from "../models/User.model";
-import Message from "../models/Message.model";
+import prisma from '../config/prisma';
 
 const CLERK = process.env.CLERK_SECRET_KEY!;
 
@@ -32,10 +30,10 @@ export const initializeSocket = (httpServer: HttpServer) => {
 
             const clerkId = session.sub;
 
-            const user = await User.findOne({ clerkId });
+            const user = await prisma.user.findUnique({ where: { clerkId } });
             if(!user) return next(new Error("User not found"));
 
-            socket.data.userId = user._id.toString();
+            socket.data.userId = user.id;
             next();
 
         } catch (error: any) {
@@ -70,36 +68,57 @@ export const initializeSocket = (httpServer: HttpServer) => {
         // handle sending messages
         socket.on("send-message", async (data: { chatId: string, text: string}) => {
             try {
-                const { chatId, text } = data
+                const { chatId, text } = data;
 
-                const chat = await Chat.findOne({
-                    _id: chatId,
-                    participants: userId,
+                const chat = await prisma.chat.findUnique({
+                    where: { id: chatId },
+                    include: { participants: true }
                 });
-                if(!chat){
-                    socket.emit("socket-error", "Chat not found");
+
+                if(!chat || !chat.participants.some(p => p.id === userId)){
+                    socket.emit("socket-error", "Chat not found or access denied");
                     return;
                 };
 
-                const message = await Message.create({
-                    chat: chatId,
-                    sender: userId,
-                    text,
+                const message = await prisma.message.create({
+                    data: {
+                        chatId,
+                        senderId: userId,
+                        text,
+                    },
+                    include: {
+                        sender: {
+                            select: {
+                                name: true,
+                                avatar: true
+                            }
+                        }
+                    }
                 });
 
-                chat.lastMessage = message._id;
-                chat.lastMessageAt = message.createdAt;
-                await chat.save();
-
-                await message.populate("sender",  "name avatar");
+                await prisma.chat.update({
+                    where: { id: chatId },
+                    data: {
+                        lastMessageId: message.id,
+                        lastMessageAt: message.createdAt
+                    }
+                });
 
                 io.to(`chat: ${chatId}`).emit("new-message", message);
 
-                for(const participantId of chat.participants){
-                    io.to
+                // For real-time updates when user is not in the chat screen
+                for(const participant of chat.participants){
+                    if(participant.id !== userId) {
+                        io.to(`user:${participant.id}`).emit("notification", {
+                            chatId,
+                            senderId: userId,
+                            text
+                        });
+                    }
                 };
             } catch (error) {
-                socket.emit("socket-error", error);
+                console.error("Socket send-message error:", error);
+                socket.emit("socket-error", "Failed to send message");
             }
         });
 
@@ -111,20 +130,23 @@ export const initializeSocket = (httpServer: HttpServer) => {
                 isTyping: data.isTyping,
             }
 
-            socket.to(`chat${data.chatId}`).emit("typing", typingPayload);
+            socket.to(`chat:${data.chatId}`).emit("typing", typingPayload);
 
             try {
-                const chat = await Chat.findById(data.chatId);
+                const chat = await prisma.chat.findUnique({
+                    where: { id: data.chatId },
+                    include: { participants: true }
+                });
                 if(chat) {
-                    const otherParticipantId = chat.participants.find(
-                        (p: any) => p.toString() !== userId
+                    const otherParticipant = chat.participants.find(
+                        (p) => p.id !== userId
                     );
-                    if(otherParticipantId){
-                        socket.to(`user:${otherParticipantId}`).emit("typing", typingPayload);
+                    if(otherParticipant){
+                        socket.to(`user:${otherParticipant.id}`).emit("typing", typingPayload);
                     }
                 }
             } catch (error) {
-                
+                // Ignore silent typing errors
             }
 
         });

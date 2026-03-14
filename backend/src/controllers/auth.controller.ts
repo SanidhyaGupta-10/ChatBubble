@@ -1,12 +1,14 @@
 import type { Response, Request, NextFunction } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
-import User from "../models/User.model";
+import prisma from "../config/prisma";
 import { clerkClient, getAuth } from "@clerk/express";
 
 export async function getMe(req: AuthRequest, res: Response, next:NextFunction) {
     try {
         const userId = req.userId;
-        const user = await User.findById(userId);
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
 
         if (!user) {
             res.status(404).json({
@@ -35,20 +37,24 @@ export async function authCallback(req: Request, res: Response, next: NextFuncti
 
         console.log(`📌 Auth callback for clerkId: ${clerkId}`);
         
-        let user = await User.findOne({ clerkId });
+        let user = await prisma.user.findUnique({ 
+            where: { clerkId } 
+        });
 
         if (!user) {
             console.log(`👤 New user detected, creating from Clerk...`);
             // get user info from clerk to save in db
             const clerkUser = await clerkClient.users.getUser(clerkId);
 
-            user = await User.create({
-                clerkId,
-                name: clerkUser.firstName
-                    ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim()
-                    : clerkUser.emailAddresses[0]?.emailAddress?.split("@")[0],
-                email: clerkUser.emailAddresses[0]?.emailAddress,
-                avatar: clerkUser.imageUrl,
+            user = await prisma.user.create({
+                data: {
+                    clerkId,
+                    name: clerkUser.firstName
+                        ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim()
+                        : clerkUser.emailAddresses[0]?.emailAddress?.split("@")[0] || "Unknown",
+                    email: clerkUser.emailAddresses[0]?.emailAddress || "",
+                    avatar: clerkUser.imageUrl || "",
+                }
             });
             console.log(`✅ User created: ${user.name}`);
         } else {

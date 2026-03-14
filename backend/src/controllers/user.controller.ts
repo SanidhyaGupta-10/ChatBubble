@@ -1,6 +1,6 @@
 import type { Response, NextFunction } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
-import User from "../models/User.model";
+import prisma from "../config/prisma";
 
 export async function getUsers(req: AuthRequest, res: Response, next: NextFunction) {
     try {
@@ -16,13 +16,28 @@ export async function getUsers(req: AuthRequest, res: Response, next: NextFuncti
 
         console.log(`📌 Fetching users for userId: ${userId}, page: ${page}`);
         
-        const users = await User.find({ _id: { $ne: userId } })
-            .select("_id name email avatar")
-            .sort({ _id: 1 })
-            .skip(skip)
-            .limit(limit);
+        const users = await prisma.user.findMany({
+            where: {
+                NOT: { id: userId }
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true
+            },
+            orderBy: {
+                id: 'asc'
+            },
+            skip: skip,
+            take: limit
+        });
 
-        const total = await User.countDocuments({ _id: { $ne: userId } });
+        const total = await prisma.user.count({
+            where: {
+                NOT: { id: userId }
+            }
+        });
 
         console.log(`✅ Found ${users.length} users (total: ${total})`);
         res.json({

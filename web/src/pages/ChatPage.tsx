@@ -37,6 +37,8 @@ function ChatPage() {
   const { data: chats = [], isLoading: chatsLoading } = useChats();
   const { data: messages = [], isLoading: messagesLoading } = useMessages(activeChatId);
 
+  const chatList = Array.isArray(chats) ? chats : [];
+
   const startChatMutation = useGetOrCreateChat();
 
   // scroll to bottom when messages change
@@ -72,7 +74,7 @@ function ChatPage() {
       setTyping(activeChatId, false);
     }, 2000);
   };
-  const activeChat = chats.find((c: any) => c._id === activeChatId);
+  const activeChat = chatList.find((c: any) => c._id === activeChatId);
 
   return (
     <div className="h-screen flex bg-base-100 text-base-content">
@@ -109,9 +111,9 @@ function ChatPage() {
             </div>
           )}
 
-          {chats.length === 0 && !chatsLoading && <NoConversationsUI />}
+          {chatList.length === 0 && !chatsLoading && <NoConversationsUI />}
           <div className="flex flex-col gap-1">
-            {chats.map((chat: any) => (
+            {chatList.map((chat: any) => (
               <ChatListItem
                 key={chat._id}
                 chat={chat}
@@ -155,7 +157,7 @@ function ChatPage() {
         ) : <NoChatSelectedUI />}
       </div>
 
-      <NewChatModal 
+      <NewChatModal
         onStartChat={handleStartChat}
         isPending={startChatMutation.isPending}
         isOpen={isNewChatModalOpen}
