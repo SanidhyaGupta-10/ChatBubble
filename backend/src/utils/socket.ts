@@ -2,6 +2,7 @@ import { Socket, Server as SocketServer } from "socket.io";
 import { Server as HttpServer } from "http";
 import { verifyToken } from "@clerk/express";
 import prisma from '../config/prisma';
+import { serializeMessage } from "./serializers";
 
 const CLERK = process.env.CLERK_SECRET_KEY!;
 
@@ -56,12 +57,20 @@ export const initializeSocket = (httpServer: HttpServer) => {
         // notify others that this current user is online
         socket.broadcast.emit("user-online", { userId });
 
-        socket.join(`user: ${userId}`);
+        socket.join(`user:${userId}`);
 
-        socket.on("join-chat", (chatId: string) => {
+        socket.on("join-chat", (payload: string | { chatId: string }) => {
+            const chatId = typeof payload === "string" ? payload : payload.chatId;
+            if(!chatId) return;
+
+            socket.join(`chat:${chatId}`);
             socket.join(`chat: ${chatId}`);
         });
-        socket.on("leave-chat", (chatId: string) => {
+        socket.on("leave-chat", (payload: string | { chatId: string }) => {
+            const chatId = typeof payload === "string" ? payload : payload.chatId;
+            if(!chatId) return;
+
+            socket.leave(`chat:${chatId}`);
             socket.leave(`chat: ${chatId}`);
         });
 
@@ -89,7 +98,9 @@ export const initializeSocket = (httpServer: HttpServer) => {
                     include: {
                         sender: {
                             select: {
+                                id: true,
                                 name: true,
+                                email: true,
                                 avatar: true
                             }
                         }
@@ -104,7 +115,10 @@ export const initializeSocket = (httpServer: HttpServer) => {
                     }
                 });
 
-                io.to(`chat: ${chatId}`).emit("new-message", message);
+                const serializedMessage = serializeMessage(message);
+
+                io.to(`chat:${chatId}`).emit("new-message", serializedMessage);
+                io.to(`chat: ${chatId}`).emit("new-message", serializedMessage);
 
                 // For real-time updates when user is not in the chat screen
                 for(const participant of chat.participants){
@@ -131,6 +145,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
             }
 
             socket.to(`chat:${data.chatId}`).emit("typing", typingPayload);
+            socket.to(`chat: ${data.chatId}`).emit("typing", typingPayload);
 
             try {
                 const chat = await prisma.chat.findUnique({
