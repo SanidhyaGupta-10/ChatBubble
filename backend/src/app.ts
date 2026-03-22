@@ -15,17 +15,33 @@ const __dirname = path.dirname(__filename);
 
 
 const app = express();
-const PORT = process.env.PORT || 3000
 
-const allowedOrigins = [
+const defaultAllowedOrigins = [
     'http://localhost:5173',
     'http://localhost:8081',
-    process.env.FRONTEND_URL!
-].filter(Boolean);
+];
+
+const envAllowedOrigins = (process.env.ALLOWED_ORIGINS ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([
+  ...defaultAllowedOrigins,
+  ...envAllowedOrigins,
+  process.env.FRONTEND_URL,
+].filter(Boolean)));
 
 app.use(cors(
   {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Origin not allowed by CORS"));
+    },
     credentials: true, // for cookies and other credentials;
   }
 ))
@@ -39,6 +55,14 @@ app.get('/user', (req, res) => {
         message: "Hello World",
     })
 })
+
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime(),
+  });
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);

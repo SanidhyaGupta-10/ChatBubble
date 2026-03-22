@@ -23,7 +23,6 @@ const ChatDetailScreen = () => {
   const { id: chatId, name, avatar, participantId } = useLocalSearchParams<ChatParams>();
 
   const [messageText, setMessageText] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const { data: currentUser } = useCurrentUser();
@@ -91,15 +90,13 @@ const ChatDetailScreen = () => {
   }, [chatId, isConnected, sendTyping]);
 
   const handleSend = () => {
-    console.log({ isSending, isConnected, currentUser, messageText });
-    if (!messageText.trim() || isSending || !isConnected || !currentUser) return;
+    if (!messageText.trim() || !isConnected || !currentUser) return;
     // stop typing indicator
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
     sendTyping(chatId, false);
 
-    setIsSending(true);
     sendMessage(chatId, messageText.trim(), {
       _id: currentUser._id,
       name: currentUser.name,
@@ -107,7 +104,6 @@ const ChatDetailScreen = () => {
       avatar: currentUser.avatar,
     });
     setMessageText("");
-    setIsSending(false);
 
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -195,19 +191,15 @@ const ChatDetailScreen = () => {
                 value={messageText}
                 onChangeText={handleTyping}
                 onSubmitEditing={handleSend}
-                editable={!isSending}
+                editable={isConnected}
               />
 
               <Pressable
                 className="w-8 h-8 rounded-full items-center justify-center bg-primary"
                 onPress={handleSend}
-                disabled={!messageText.trim() || isSending}
+                disabled={!messageText.trim() || !isConnected}
               >
-                {isSending ? (
-                  <ActivityIndicator size="small" color="#0D0D0F" />
-                ) : (
-                  <Ionicons name="send" size={18} color="#0D0D0F" />
-                )}
+                <Ionicons name="send" size={18} color="#0D0D0F" />
               </Pressable>
             </View>
           </View>
