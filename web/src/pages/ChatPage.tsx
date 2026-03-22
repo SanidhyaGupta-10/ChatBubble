@@ -1,12 +1,12 @@
 import { UserButton } from "@clerk/clerk-react"
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useSocketStore } from "../lib/socket";
 import { useSocketConnection } from "../hooks/useSocketConnection";
 import { useChats, useGetOrCreateChat } from "../hooks/useChats";
 import { useMessages } from "../hooks/useMessages";
 import { useCurrentUser } from "../hooks/useCurrentUser";
-import { Link, MessageSquareIcon, PlusIcon, SparklesIcon } from "lucide-react";
+import { MessageSquareIcon, PlusIcon, SparklesIcon } from "lucide-react";
 import { ChatListItem } from "../components/ChatListItem";
 import { ChatHeader } from "../components/ChatHeader";
 import { MessageBubble } from "../components/MessageBubble";
@@ -130,7 +130,7 @@ function ChatPage() {
         {/* Chat Header */}
         {activeChatId && activeChat ? (
           <>
-            <ChatHeader participant={activeChat.participant} chatId={activeChat} />
+            <ChatHeader participant={activeChat.participant} chatId={activeChatId} />
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {messagesLoading && (

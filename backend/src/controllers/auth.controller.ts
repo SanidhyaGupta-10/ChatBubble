@@ -2,6 +2,7 @@ import type { Response, Request, NextFunction } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import prisma from "../config/prisma";
 import { clerkClient, getAuth } from "@clerk/express";
+import { serializeUser } from "../utils/serializers";
 
 export async function getMe(req: AuthRequest, res: Response, next:NextFunction) {
     try {
@@ -17,7 +18,7 @@ export async function getMe(req: AuthRequest, res: Response, next:NextFunction) 
             return;
         };
 
-        res.status(200).json(user);
+        res.status(200).json(serializeUser(user));
     } catch (error) {
         res.status(500)
         next(error);
@@ -61,7 +62,7 @@ export async function authCallback(req: Request, res: Response, next: NextFuncti
             console.log(`✅ User found: ${user.name}`);
         }
 
-        res.json(user);
+        res.json(serializeUser(user));
     } catch (error) {
         console.error("❌ Auth callback error:", error);
         res.status(500).json({

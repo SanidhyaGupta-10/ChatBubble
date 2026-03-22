@@ -1,6 +1,7 @@
 import type { Response, NextFunction } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware"
 import prisma from "../config/prisma";
+import { serializeMessage } from "../utils/serializers";
 
 export async function getMessages(req: AuthRequest, res: Response, next:NextFunction) {
     try {
@@ -42,7 +43,7 @@ export async function getMessages(req: AuthRequest, res: Response, next:NextFunc
             }
         });
 
-        res.json(messages)
+        res.json(messages.map(serializeMessage))
 
     } catch (error) {
         res.status(500),
