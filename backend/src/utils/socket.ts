@@ -5,16 +5,24 @@ import prisma from '../config/prisma';
 import { serializeMessage } from "./serializers";
 
 const CLERK = process.env.CLERK_SECRET_KEY!;
+const defaultAllowedOrigins = [
+    'http://localhost:8081',
+    'http://localhost:5173',
+];
+const envAllowedOrigins = (process.env.ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
 // store online users in memory: userId => socketid
 export const OnlineUsers: Map<string, string> = new Map();
 
 export const initializeSocket = (httpServer: HttpServer) => {
-    const allowedOrigins = [
-        'http://localhost:8081',
-        'http://localhost:5173',
+    const allowedOrigins = Array.from(new Set([
+        ...defaultAllowedOrigins,
+        ...envAllowedOrigins,
         process.env.FRONTEND_URL,
-    ].filter(Boolean) as string[]
+    ].filter(Boolean))) as string[]
 
     const io = new SocketServer(httpServer, { 
         cors: { origin: allowedOrigins}
@@ -75,7 +83,10 @@ export const initializeSocket = (httpServer: HttpServer) => {
         });
 
         // handle sending messages
-        socket.on("send-message", async (data: { chatId: string, text: string}) => {
+        socket.on("send-message", async (
+            data: { chatId: string, text: string},
+            ack?: (error?: { message: string }) => void
+        ) => {
             try {
                 const { chatId, text } = data;
 
@@ -85,7 +96,9 @@ export const initializeSocket = (httpServer: HttpServer) => {
                 });
 
                 if(!chat || !chat.participants.some(p => p.id === userId)){
-                    socket.emit("socket-error", "Chat not found or access denied");
+                    const error = { message: "Chat not found or access denied" };
+                    socket.emit("socket-error", error.message);
+                    ack?.(error);
                     return;
                 };
 
@@ -119,6 +132,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
 
                 io.to(`chat:${chatId}`).emit("new-message", serializedMessage);
                 io.to(`chat: ${chatId}`).emit("new-message", serializedMessage);
+                ack?.();
 
                 // For real-time updates when user is not in the chat screen
                 for(const participant of chat.participants){
@@ -132,7 +146,9 @@ export const initializeSocket = (httpServer: HttpServer) => {
                 };
             } catch (error) {
                 console.error("Socket send-message error:", error);
-                socket.emit("socket-error", "Failed to send message");
+                const socketError = { message: "Failed to send message" };
+                socket.emit("socket-error", socketError.message);
+                ack?.(socketError);
             }
         });
 
