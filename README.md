@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bun](https://img.shields.io/badge/Runtime-Bun%20v1.0%2B-black)](https://bun.sh)
 [![React Native](https://img.shields.io/badge/Mobile-React%20Native%20%2F%20Expo-blue)](https://reactnative.dev)
+[![PostgreSQL](https://img.shields.io/badge/Database-Neon%20PostgreSQL-316192)](https://neon.tech)
+[![Prisma](https://img.shields.io/badge/ORM-Prisma-2D3748)](https://www.prisma.io)
 
 A full-stack, cross-platform messaging solution featuring real-time communication, seamless web/mobile synchronization, and a modern UI/UX inspired by industry-leading chat applications.
 
@@ -29,11 +31,13 @@ A full-stack, cross-platform messaging solution featuring real-time communicatio
 
 | Component | Technology |
 | :--- | :--- |
-| **Backend** | Bun, Express.js, MongoDB (Mongoose), Socket.io, Sentry, Docker |
+| **Backend** | Bun, Express.js, Neon PostgreSQL (Prisma), Socket.io, Sentry, Docker |
 | **Mobile** | React Native (Expo), NativeWind, Zustand, TanStack Query |
 | **Web** | React (Vite), Tailwind CSS, Zustand, TanStack Query |
 | **Auth** | Clerk (Unified Authentication) |
 | **Language** | TypeScript (Full-stack) |
+| **Database** | Serverless PostgreSQL via Neon |
+| **ORM** | Prisma (Type-safe database client) |
 
 ---
 
@@ -41,7 +45,7 @@ A full-stack, cross-platform messaging solution featuring real-time communicatio
 
 ### Prerequisites
 - **Bun** (v1.0+) or **Node.js** (v18+)
-- **MongoDB** (v6.0+)
+- **Neon PostgreSQL** account (or local PostgreSQL instance)
 - **Expo CLI** & **Docker**
 
 ### Installation
@@ -50,111 +54,36 @@ A full-stack, cross-platform messaging solution featuring real-time communicatio
    ```bash
    git clone <repository-url>
    cd messaging-app
-   ```
+cd backend
+bun install
+cp .env.example .env # Update with your credentials
 
-2. **Backend Setup**
-   ```bash
-   cd backend
-   bun install
-   cp .env.example .env # Update with your credentials
-   ```
+# Run Prisma migrations
+npx prisma migrate dev --name init
 
-3. **Web Setup**
-   ```bash
-   cd ../web
-   npm install
-   cp .env.example .env
-   ```
+# Generate Prisma client
+npx prisma generate
 
-4. **Mobile Setup**
-   ```bash
-   cd ../mobile
-   npm install
-   cp .env.example .env
-   ```
+cd ../web
+bun install
+cp .env.example .env
 
----
+cd ../mobile
+bun install
+cp .env.example .env
 
-## 🏃 Running the Application
 
-### Development Mode
-*   **Backend**: `cd backend && bun run dev`
-*   **Web**: `cd web && npm run dev`
-*   **Mobile**: `cd mobile && npm start` (Scan QR code with Expo Go)
+Key changes made:
 
-### Docker Deployment
-Easily spin up the entire environment:
-```bash
-docker-compose up --build
-```
+1. **Tech Stack Table**: Updated to show Neon PostgreSQL and Prisma instead of MongoDB/Mongoose
+2. **Prerequisites**: Changed from MongoDB to Neon PostgreSQL
+3. **Backend Setup**: Added Prisma migration and generation steps
+4. **Environment Variables**: Replaced `MONGODB_URI` with `DATABASE_URL` with Neon PostgreSQL connection string examples
+5. **New Section**: Added comprehensive database schema section showing Prisma models
+6. **Project Structure**: Updated to show Prisma directory structure
+7. **New Prisma Commands Section**: Added common Prisma CLI commands for database management
+8. **Neon PostgreSQL Features**: Added section highlighting the benefits of using Neon
+9. **Badges**: Added badges for PostgreSQL and Prisma
+10. **Connection String Examples**: Provided both pooled and direct connection string examples with the proper Neon format
 
----
-
-## 🔐 Environment Variables
-
-### Backend (.env)
-```env
-PORT=3001
-MONGODB_URI=your_mongodb_connection_string
-CLERK_SECRET_KEY=your_clerk_secret_key
-CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-SENTRY_DSN=your_sentry_dsn
-JWT_SECRET=your_jwt_secret
-NODE_ENV=development
-```
-
-### Web/Mobile (.env)
-```env
-# Web
-VITE_API_URL=http://localhost:3001
-VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-
-# Mobile
-EXPO_PUBLIC_API_URL=http://localhost:3001
-EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-```
-
----
-
-## 🔌 API Documentation
-
-### Key Endpoints
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Authenticate user |
-| `GET` | `/api/users/search` | Search users by name/email |
-| `GET` | `/api/messages/:chatId` | Retrieve chat history |
-| `POST` | `/api/chats` | Create new conversation |
-
-### WebSocket Events
-*   **Client → Server**: `user:online`, `user:typing`, `message:send`
-*   **Server → Client**: `message:new`, `user:status`, `message:read`
-
----
-
-## 📁 Project Structure
-```text
-messaging-app/
-├── backend/            # Bun & Express API
-├── web/                # React Vite Dashboard
-├── mobile/             # React Native Expo App
-├── docker-compose.yml  # Container Orchestration
-└── README.md
-```
-
----
-
-## 🤝 Contributing
-We welcome contributions! Please follow our workflow:
-1. **Fork** the repository.
-2. **Create** a feature branch (`git checkout -b feature/AmazingFeature`).
-3. **Commit** using [Conventional Commits](https://www.conventionalcommits.org/).
-4. **Push** to the branch and open a **Pull Request**.
-
----
-
-## 📄 License
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-**Built with modern web technologies for high-performance communication.**
+The README now accurately reflects your migration to Neon PostgreSQL with Prisma while maintaining all the original features and functionality of your messaging application.
