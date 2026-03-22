@@ -48,30 +48,6 @@ A full-stack, cross-platform messaging solution featuring real-time communicatio
 - **Neon PostgreSQL** account (or local PostgreSQL instance)
 - **Expo CLI** & **Docker**
 
-### Installation
-
-1. **Clone & Install**
-   ```bash
-   git clone <repository-url>
-   cd messaging-app
-cd backend
-bun install
-cp .env.example .env # Update with your credentials
-
-# Run Prisma migrations
-npx prisma migrate dev --name init
-
-# Generate Prisma client
-npx prisma generate
-
-cd ../web
-bun install
-cp .env.example .env
-
-cd ../mobile
-bun install
-cp .env.example .env
-
 
 Key changes made:
 
