@@ -1,6 +1,6 @@
 import { getAuth, requireAuth } from "@clerk/express";
 import type { Request, Response, NextFunction } from "express";
-import User from "../models/User.model";
+import prisma from "../config/prisma";
 
 export type AuthRequest = Request & {
     userId? : string
@@ -15,12 +15,12 @@ export const protectedRoute = [
                 message: "Unauthorized - Invalid Token",
             });
 
-            const user = await User.findOne({ clerkId });
+            const user = await prisma.user.findUnique({ where: { clerkId } });
             if(!user) return res.status(404).json({
                  message: "User not found"
             });
 
-            req.userId =  user._id.toString();
+            req.userId =  user.id;
             next();
         } catch (error) {
             console.log(error);

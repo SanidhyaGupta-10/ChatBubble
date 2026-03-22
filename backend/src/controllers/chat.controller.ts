@@ -1,6 +1,7 @@
 import type { NextFunction, Response } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import prisma from "../config/prisma";
+import { serializeChat } from "../utils/serializers";
 
 export async function getChats(req: AuthRequest, res: Response, next: NextFunction) {
     try {
@@ -20,7 +21,18 @@ export async function getChats(req: AuthRequest, res: Response, next: NextFuncti
                         avatar: true
                     }
                 },
-                lastMessage: true
+                lastMessage: {
+                    include: {
+                        sender: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                avatar: true,
+                            }
+                        }
+                    }
+                }
             },
             orderBy: {
                 lastMessageAt: 'desc'
@@ -30,13 +42,13 @@ export async function getChats(req: AuthRequest, res: Response, next: NextFuncti
         const formattedChats = chats.map(chat => {
             const otherParticipant = chat.participants.find(p => p.id !== userId);
 
-            return {
+            return serializeChat({
                 id: chat.id,
                 participant: otherParticipant ?? null,
                 lastMessage: chat.lastMessage,
                 lastMessageAt: chat.lastMessageAt,
                 createdAt: chat.createdAt,
-            }
+            });
         });
         res.json(formattedChats);
     } catch (error) {
@@ -48,7 +60,7 @@ export async function getChats(req: AuthRequest, res: Response, next: NextFuncti
 export async function getOrCreateChat(req: AuthRequest, res: Response, next: NextFunction) {
     try {
         const userId = req.userId as string;
-        const participantId = req.params.participantId as string;
+        const participantId = (req.params.participantId ?? req.params.participantsId) as string;
 
         if(!participantId){
             res.status(400).json({
@@ -81,7 +93,18 @@ export async function getOrCreateChat(req: AuthRequest, res: Response, next: Nex
                         avatar: true
                     }
                 },
-                lastMessage: true
+                lastMessage: {
+                    include: {
+                        sender: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                avatar: true,
+                            }
+                        }
+                    }
+                }
             }
         });
 
@@ -104,20 +127,31 @@ export async function getOrCreateChat(req: AuthRequest, res: Response, next: Nex
                             avatar: true
                         }
                     },
-                    lastMessage: true
+                    lastMessage: {
+                        include: {
+                            sender: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    email: true,
+                                    avatar: true,
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
 
         const otherParticipant = chat.participants.find(p => p.id !== userId);
 
-        res.json({
+        res.json(serializeChat({
             id: chat.id,
             participant: otherParticipant ?? null,
             lastMessage: chat.lastMessage,
             lastMessageAt: chat.lastMessageAt,
             createdAt: chat.createdAt,
-        })
+        }))
     } catch (error) {
         res.status(500);
         next(error);
