@@ -7,6 +7,9 @@
 
 A full-stack, cross-platform messaging solution featuring real-time communication, seamless web/mobile synchronization, and a modern UI/UX inspired by industry-leading chat applications.
 
+**📢 Note: This application is currently undergoing maintenance and fixes as part of the transition to Version 2.0.**
+
+
 ---
 
 ## 🌟 Features

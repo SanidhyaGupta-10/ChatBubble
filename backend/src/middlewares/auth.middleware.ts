@@ -1,31 +1,40 @@
 import { getAuth, requireAuth } from "@clerk/express";
 import type { Request, Response, NextFunction } from "express";
-import User from "../models/User.model";
+import prisma from "../config/prisma";
 
-export type AuthRequest = Request & {
-    userId? : string
+export interface AuthRequest extends Request {
+    userId?: string;
 }
 
 export const protectedRoute = [
     requireAuth(),
-    async ( req: AuthRequest, res: Response, next: NextFunction ) => {
+    async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {   
             const { userId: clerkId } = getAuth(req);  
-            if(!clerkId) return res.status(401).json({
-                message: "Unauthorized - Invalid Token",
+            
+            if (!clerkId) {
+                res.status(401).json({
+                    message: "Unauthorized - Invalid Token",
+                });
+                return;
+            }
+
+            const user = await prisma.user.findUnique({ 
+                where: { clerkId } 
             });
 
-            const user = await User.findOne({ clerkId });
-            if(!user) return res.status(404).json({
-                 message: "User not found"
-            });
+            if (!user) {
+                res.status(404).json({
+                    message: "User not found"
+                });
+                return;
+            }
 
-            req.userId =  user._id.toString();
+            req.userId = user.id;
             next();
         } catch (error) {
-            console.log(error);
-            res.status(500);
+            console.error("Auth Middleware Error:", error);
             next(error);
-        };
+        }
     }
-];
+];
