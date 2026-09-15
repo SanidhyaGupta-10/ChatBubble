@@ -3,8 +3,7 @@ import { io, Socket } from "socket.io-client";
 import { QueryClient } from "@tanstack/react-query";
 import { Chat, Message, MessageSender } from "@/types";
 import * as Sentry from "@sentry/react-native";
-
-const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+import { SOCKET_URL } from "./config";
 
 interface SocketState {
   socket: Socket | null;
@@ -50,6 +49,11 @@ export const useSocketStore = create<SocketState>((set, get) => ({
 
     socket.on("disconnect", () => {
       Sentry.logger.info("Socket disconnected");
+      set({ isConnected: false });
+    });
+
+    socket.on("connect_error", (error: Error) => {
+      Sentry.logger.error("Socket connection error", { message: error.message });
       set({ isConnected: false });
     });
 

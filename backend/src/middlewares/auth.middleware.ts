@@ -37,4 +37,4 @@ export const protectedRoute = [
             next(error);
         }
     }
-];
+];

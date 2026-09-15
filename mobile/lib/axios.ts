@@ -2,8 +2,7 @@ import axios from "axios";
 import * as Sentry from "@sentry/react-native";
 import { useAuth } from "@clerk/clerk-expo";
 import { useCallback } from "react";
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
+import { API_URL } from "./config";
 
 // this is the same thing we did with useEffect setup but it's optimized version - it's better!!
 

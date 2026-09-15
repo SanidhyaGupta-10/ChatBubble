@@ -5,8 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "bun -r dotenv/config --watch server.ts",
-    "start": "bun server.ts",
-    "build": "bun install",
+    "start": "bun -r dotenv/config server.ts",
+    "build": "bunx prisma generate",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "check": "bun run build && bun run typecheck",
     "seed": "bun src/scripts/seed.script.ts"
   },
   "devDependencies": {

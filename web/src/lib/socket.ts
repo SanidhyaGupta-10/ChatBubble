@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { io, Socket } from "socket.io-client";
 import type { QueryClient } from "@tanstack/react-query";
-
-const SOCKET_URL = import.meta.env.VITE_API_URL as string;
+import { SOCKET_URL } from "./config";
 
 /* =======================
    Types & Interfaces
@@ -10,12 +9,9 @@ const SOCKET_URL = import.meta.env.VITE_API_URL as string;
 
 interface User {
   _id: string;
-  fullName?: string;
-  firstName?: string;
-  primaryEmailAddress?: {
-    emailAddress: string;
-  };
-  imageUrl?: string;
+  name?: string;
+  email?: string;
+  avatar?: string;
 }
 
 interface Message {
@@ -74,10 +70,6 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
 
     const socket: Socket = io(SOCKET_URL, {
       auth: { token },
-    });
-
-    socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
     });
 
     socket.on("connect_error", (error: Error) => {
@@ -187,9 +179,9 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
       chat: chatId,
       sender: {
         _id: currentUser._id,
-        name: currentUser.fullName || currentUser.firstName || "You",
-        email: currentUser.primaryEmailAddress?.emailAddress || "",
-        avatar: currentUser.imageUrl,
+        name: currentUser.name || "You",
+        email: currentUser.email || "",
+        avatar: currentUser.avatar,
       },
       text,
       createdAt: new Date().toISOString(),
@@ -199,9 +191,9 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
       old ? [...old, optimisticMessage] : [optimisticMessage]
     );
 
-    socket.emit("send-message", { chatId, text });
+    socket.emit("send-message", { chatId, text }, (error?: { message: string }) => {
+      if (!error) return;
 
-    socket.once("socket-error", () => {
       queryClient.setQueryData<Message[]>(["messages", chatId], (old) =>
         old ? old.filter((m) => m._id !== tempId) : []
       );

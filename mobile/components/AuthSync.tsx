@@ -1,6 +1,6 @@
 import { useAuthCallback } from "@/hooks/useAuth";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { use, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as Sentry from '@sentry/react-native';
 
 const AuthSync = () => {
@@ -14,14 +14,12 @@ const AuthSync = () => {
             hasSynced.current = true;
             syncUser(undefined, {
                 onSuccess: (data) => {
-                    console.log("User synced", data.name);
                     Sentry.logger.info(Sentry.logger.fmt`User synced ${data.name}`, {
                         userId: user.id,
                         userName: data.name,
                     });
                 },
                 onError: (error) => {
-                    console.log("Error syncing user", error);
                     Sentry.logger.error(Sentry.logger.fmt`Error syncing user ${error}`, {
                         userId: user.id,
                         error: error instanceof Error ? error.message : String(error),

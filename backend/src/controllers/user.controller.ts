@@ -1,6 +1,7 @@
 import type { Response, NextFunction } from "express";
 import type { AuthRequest } from "../middlewares/auth.middleware";
 import prisma from "../config/prisma";
+import { serializeUser } from "../utils/serializers";
 
 export async function getUsers(req: AuthRequest, res: Response, next: NextFunction) {
     try {
@@ -41,7 +42,7 @@ export async function getUsers(req: AuthRequest, res: Response, next: NextFuncti
 
         console.log(`✅ Found ${users.length} users (total: ${total})`);
         res.json({
-            users,
+            users: users.map(serializeUser),
             pagination: {
                 page,
                 limit,
