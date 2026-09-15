@@ -41,7 +41,7 @@ interface Chat {
 interface SocketStore {
   socket: Socket | null;
   onlineUsers: Set<string>;
-  typingUsers: Map<string, string>; // chatId -> userId
+  typingUsers: Map<string, Set<string>>; // chatId -> Set of userIds
   queryClient: QueryClient | null;
 
   connect: (token: string, queryClient: QueryClient) => void;
@@ -59,7 +59,7 @@ interface SocketStore {
 export const useSocketStore = create<SocketStore>((set, get) => ({
   socket: null,
   onlineUsers: new Set<string>(),
-  typingUsers: new Map<string, string>(),
+  typingUsers: new Map<string, Set<string>>(),
   queryClient: null,
 
   connect: (token, queryClient) => {
@@ -103,8 +103,13 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
       ({ userId, chatId, isTyping }: { userId: string; chatId: string; isTyping: boolean }) => {
         set((state) => {
           const typingUsers = new Map(state.typingUsers);
-          if (isTyping) typingUsers.set(chatId, userId);
-          else typingUsers.delete(chatId);
+          const userSet = typingUsers.get(chatId) || new Set();
+          if (isTyping) userSet.add(userId);
+          else userSet.delete(userId);
+
+          if (userSet.size === 0) typingUsers.delete(chatId);
+          else typingUsers.set(chatId, userSet);
+
           return { typingUsers };
         });
       }
@@ -128,7 +133,7 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
                 lastMessage: {
                   _id: message._id,
                   text: message.text,
-                  sender: senderId!,
+                  sender: senderId || "Unknown",
                   createdAt: message.createdAt,
                 },
                 lastMessageAt: message.createdAt,

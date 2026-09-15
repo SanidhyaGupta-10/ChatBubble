@@ -24,7 +24,8 @@ export function ChatListItem({
   isActive?: boolean;
   onClick?: MouseEventHandler<HTMLButtonElement>;
 }) {
-  const { onlineUsers, typingUsers } = useSocketStore();
+  const onlineUsers = useSocketStore((s) => s.onlineUsers);
+  const typingUsers = useSocketStore((s) => s.typingUsers);
   const isOnline = Boolean(chat.participant?._id && onlineUsers.has(chat.participant._id));
   const isTyping = !!typingUsers.get(chat._id);
 

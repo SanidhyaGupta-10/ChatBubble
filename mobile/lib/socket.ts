@@ -85,7 +85,8 @@ export const useSocketStore = create<SocketState>((set, get) => ({
 
     socket.on("new-message", (message: Message) => {
       const { currentChatId } = get();
-      const senderId = (message.sender as MessageSender)._id;
+      const sender = message.sender;
+      const senderId = typeof sender === 'object' ? sender?._id : sender;
 
       queryClient.setQueryData<Message[]>(
         ["messages", message.chat],

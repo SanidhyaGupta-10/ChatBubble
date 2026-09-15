@@ -8,9 +8,9 @@ import useUserSync from './hooks/useUserSync';
 function App() {
   const { isLoaded, isSignedIn } = useAuth();
 
-  useUserSync();
+  const { isSynced, isSyncing } = useUserSync();
 
-  if(!isLoaded) return <PageLoader />;
+  if(!isLoaded || (isSignedIn && (isSyncing || !isSynced))) return <PageLoader />;
 
 
   return (

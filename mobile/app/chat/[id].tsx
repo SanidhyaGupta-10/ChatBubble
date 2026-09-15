@@ -49,6 +49,9 @@ const ChatDetailScreen = () => {
 
     return () => {
       if (chatId) leaveChat(chatId);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
   }, [chatId, isConnected, joinChat, leaveChat]);
 
@@ -167,7 +170,8 @@ const ChatDetailScreen = () => {
               }}
             >
               {messages.map((message) => {
-                const senderId = (message.sender as MessageSender)._id;
+                const sender = message.sender;
+                const senderId = typeof sender === 'object' ? sender?._id : sender;
                 const isFromMe = currentUser ? senderId === currentUser._id : false;
 
                 return <MessageBubble key={message._id} message={message} isFromMe={isFromMe} />;

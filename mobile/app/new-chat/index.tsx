@@ -6,14 +6,16 @@ import { User } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View, ScrollView } from "react-native";
+import { ActivityIndicator, Pressable, Text, TextInput, View, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSocketStore } from "@/lib/socket";
 
 const NewChatScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data, isLoading } = useUsers();
   const { mutate: getOrCreateChat, isPending: isCreatingChat } = useGetOrCreateChats();
+  const { onlineUsers } = useSocketStore();
 
   // client-side filtering
   const allUsers = data?.users || [];
@@ -29,6 +31,8 @@ const NewChatScreen = () => {
         router.dismiss(); // go -1
 
         setTimeout(() => {
+          if (!chat || !chat.participant) return;
+
           router.push({
             pathname: "/chat/[id]",
             params: {
@@ -94,21 +98,21 @@ const NewChatScreen = () => {
                 </Text>
               </View>
             ) : (
-              <ScrollView
+              <FlatList
                 className="flex-1 px-5 pt-4"
+                data={users}
+                keyExtractor={(item) => item._id}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 24 }}
-              >
-                <Text className="text-muted-foreground text-xs mb-3">USERS</Text>
-                {users.map((user) => (
+                ListHeaderComponent={<Text className="text-muted-foreground text-xs mb-3">USERS</Text>}
+                renderItem={({ item }) => (
                   <UserItem
-                    key={user._id}
-                    user={user}
-                    isOnline={true}
-                    onPress={() => handleUserSelect(user)}
+                    user={item}
+                    isOnline={onlineUsers.has(item._id)}
+                    onPress={() => handleUserSelect(item)}
                   />
-                ))}
-              </ScrollView>
+                )}
+              />
             )}
           </View>
         </View>
