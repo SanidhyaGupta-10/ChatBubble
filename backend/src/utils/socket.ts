@@ -14,8 +14,8 @@ const envAllowedOrigins = (process.env.ALLOWED_ORIGINS ?? '')
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-// store online users in memory: userId => socketid
-export const OnlineUsers: Map<string, string> = new Map();
+// store online users in memory: userId => Set of socketIds
+export const OnlineUsers: Map<string, Set<string>> = new Map();
 
 export const initializeSocket = (httpServer: HttpServer) => {
     const allowedOrigins = Array.from(new Set([
@@ -60,7 +60,9 @@ export const initializeSocket = (httpServer: HttpServer) => {
         socket.emit("online-users", { userIds: Array.from(OnlineUsers.keys()) });
 
         // store user in the onlineUsers map
-        OnlineUsers.set(userId, socket.id);
+        const userSockets = OnlineUsers.get(userId) || new Set();
+        userSockets.add(socket.id);
+        OnlineUsers.set(userId, userSockets);
 
         // notify others that this current user is online
         socket.broadcast.emit("user-online", { userId });
@@ -179,10 +181,15 @@ export const initializeSocket = (httpServer: HttpServer) => {
         });
 
         socket.on("disconnect", () => {
-            OnlineUsers.delete(userId);
-
-            // notify others
-            socket.broadcast.emit("user-offline", { userId });
+            const userSockets = OnlineUsers.get(userId);
+            if (userSockets) {
+                userSockets.delete(socket.id);
+                if (userSockets.size === 0) {
+                    OnlineUsers.delete(userId);
+                    // notify others only when all sockets are closed
+                    socket.broadcast.emit("user-offline", { userId });
+                }
+            }
         });
     });
 

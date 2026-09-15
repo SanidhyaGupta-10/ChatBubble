@@ -5,8 +5,10 @@ import { serializeMessage } from "../utils/serializers";
 
 export async function getMessages(req: AuthRequest, res: Response, next:NextFunction) {
     try {
-        const userId = req.userId as string;
+        const userId = req.userId;
         const chatId = req.params.chatId as string;
+        const cursor = req.query.cursor as string;
+        const limit = parseInt(req.query.limit as string) || 50;
 
         const chat = await prisma.chat.findFirst({
             where: {
@@ -40,13 +42,20 @@ export async function getMessages(req: AuthRequest, res: Response, next:NextFunc
             },
             orderBy: {
                 createdAt: 'asc',
-            }
+            },
+            take: limit,
+            cursor: cursor ? { id: cursor } : undefined,
+            skip: cursor ? 1 : 0,
         });
 
-        res.json(messages.map(serializeMessage))
+        const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null;
+
+        res.json({
+            messages: messages.map(serializeMessage),
+            nextCursor
+        })
 
     } catch (error) {
-        res.status(500),
         next(error)
     }
 }

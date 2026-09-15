@@ -6,38 +6,53 @@ import { serializeChat } from "../utils/serializers";
 export async function getChats(req: AuthRequest, res: Response, next: NextFunction) {
     try {
         const userId = req.userId as string;
-        const chats = await prisma.chat.findMany({
-            where: {
-                participants: {
-                    some: { id: userId }
-                }
-            },
-            include: {
-                participants: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        avatar: true
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 20;
+        const skip = (page - 1) * limit;
+
+        const [chats, total] = await Promise.all([
+            prisma.chat.findMany({
+                where: {
+                    participants: {
+                        some: { id: userId }
                     }
                 },
-                lastMessage: {
-                    include: {
-                        sender: {
-                            select: {
-                                id: true,
-                                name: true,
-                                email: true,
-                                avatar: true,
+                include: {
+                    participants: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            avatar: true
+                        }
+                    },
+                    lastMessage: {
+                        include: {
+                            sender: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    email: true,
+                                    avatar: true,
+                                }
                             }
                         }
                     }
+                },
+                orderBy: {
+                    lastMessageAt: 'desc'
+                },
+                skip: skip,
+                take: limit,
+            }),
+            prisma.chat.count({
+                where: {
+                    participants: {
+                        some: { id: userId }
+                    }
                 }
-            },
-            orderBy: {
-                lastMessageAt: 'desc'
-            }
-        });
+            })
+        ]);
 
         const formattedChats = chats.map(chat => {
             const otherParticipant = chat.participants.find(p => p.id !== userId);
@@ -50,9 +65,16 @@ export async function getChats(req: AuthRequest, res: Response, next: NextFuncti
                 createdAt: chat.createdAt,
             });
         });
-        res.json(formattedChats);
+        res.json({
+            chats: formattedChats,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
     } catch (error) {
-        res.status(500);
         next(error);
     }
 };

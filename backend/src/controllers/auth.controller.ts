@@ -36,31 +36,29 @@ export async function authCallback(req: Request, res: Response, next: NextFuncti
         }
 
         console.log(`📌 Auth callback for clerkId: ${clerkId}`);
-        
-        let user = await prisma.user.findUnique({ 
-            where: { clerkId } 
+
+        // Get latest user info from Clerk to ensure DB is in sync
+        const clerkUser = await clerkClient.users.getUser(clerkId);
+        const fullName = clerkUser.firstName
+            ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim()
+            : clerkUser.emailAddresses[0]?.emailAddress?.split("@")[0] || "Unknown";
+
+        const user = await prisma.user.upsert({
+            where: { clerkId },
+            update: {
+                name: fullName,
+                email: clerkUser.emailAddresses[0]?.emailAddress || "",
+                avatar: clerkUser.imageUrl || "",
+            },
+            create: {
+                clerkId,
+                name: fullName,
+                email: clerkUser.emailAddresses[0]?.emailAddress || "",
+                avatar: clerkUser.imageUrl || "",
+            },
         });
 
-        if (!user) {
-            console.log(`👤 New user detected, creating from Clerk...`);
-            // get user info from clerk to save in db
-            const clerkUser = await clerkClient.users.getUser(clerkId);
-
-            user = await prisma.user.create({
-                data: {
-                    clerkId,
-                    name: clerkUser.firstName
-                        ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim()
-                        : clerkUser.emailAddresses[0]?.emailAddress?.split("@")[0] || "Unknown",
-                    email: clerkUser.emailAddresses[0]?.emailAddress || "",
-                    avatar: clerkUser.imageUrl || "",
-                }
-            });
-            console.log(`✅ User created: ${user.name}`);
-        } else {
-            console.log(`✅ User found: ${user.name}`);
-        }
-
+        console.log(`✅ User processed: ${user.name}`);
         res.json(serializeUser(user));
     } catch (error) {
         console.error("❌ Auth callback error:", error);

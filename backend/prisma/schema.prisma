@@ -27,6 +27,8 @@ model Chat {
   lastMessageAt  DateTime  @default(now())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  @@index([lastMessageAt])
 }
 
 model Message {
