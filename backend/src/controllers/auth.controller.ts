@@ -20,7 +20,6 @@ export async function getMe(req: AuthRequest, res: Response, next:NextFunction) 
 
         res.status(200).json(serializeUser(user));
     } catch (error) {
-        res.status(500)
         next(error);
     }
 }
@@ -65,10 +64,6 @@ export async function authCallback(req: Request, res: Response, next: NextFuncti
         res.json(serializeUser(user));
     } catch (error) {
         console.error("❌ Auth callback error:", error);
-        res.status(500).json({
-            message: "Auth callback failed",
-            details: error instanceof Error ? error.message : "Unknown error"
-        });
         next(error);
     }
 };

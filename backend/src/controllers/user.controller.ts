@@ -52,10 +52,6 @@ export async function getUsers(req: AuthRequest, res: Response, next: NextFuncti
         });
     } catch (error) {
         console.error("❌ Error fetching users:", error);
-        res.status(500).json({ 
-            error: "Failed to fetch users",
-            details: error instanceof Error ? error.message : "Unknown error"
-        });
         next(error);
     }
 };

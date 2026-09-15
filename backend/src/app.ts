@@ -45,16 +45,10 @@ app.use(cors(
     credentials: true, // for cookies and other credentials;
   }
 ))
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
 // Middleware that integrates Clerk authentication into your Express application. It checks the request's cookies and headers for a session JWT and, if found, attaches the Auth object to the request object under the auth key.
 
 app.use(clerkMiddleware());
-
-app.get('/user', (req, res) => {
-    res.json({
-        message: "Hello World",
-    })
-})
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({
