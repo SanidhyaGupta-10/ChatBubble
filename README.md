@@ -1,68 +1,108 @@
-# 📱 Real-Time Messaging Application
+# 📱 NexusChat | Enterprise-Grade Real-Time Messaging
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](#)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Bun](https://img.shields.io/badge/Runtime-Bun%20v1.0%2B-black)](https://bun.sh)
-[![React Native](https://img.shields.io/badge/Mobile-React%20Native%20%2F%20Expo-blue)](https://reactnative.dev)
-[![PostgreSQL](https://img.shields.io/badge/Database-Neon%20PostgreSQL-316192)](https://neon.tech)
-[![Prisma](https://img.shields.io/badge/ORM-Prisma-2D3748)](https://www.prisma.io)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
+[![Clerk](https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge&logo=clerk&logoColor=white)](https://clerk.com/)
+[![Sentry](https://img.shields.io/badge/Sentry-362D59?style=for-the-badge&logo=sentry&logoColor=white)](https://sentry.io/)
 
-A full-stack, cross-platform messaging solution featuring real-time communication, seamless web/mobile synchronization, and a modern UI/UX inspired by industry-leading chat applications.
+NexusChat is a high-performance, full-stack messaging ecosystem designed for seamless cross-platform communication. It bridges the gap between web and mobile experiences with a unified identity layer and a real-time synchronization engine, delivering a professional-grade UI/UX inspired by industry leaders.
 
-**📢 Note: This application is currently undergoing maintenance and fixes as part of the transition to Version 2.0.**
+## 🚀 Core Features
 
+- **Cross-Platform Synchronization**: Instant message delivery and state consistency across Web and Mobile clients.
+- **Unified Identity**: Seamless authentication and session management via a centralized identity provider.
+- **Optimistic Interactions**: Zero-latency user experience with immediate UI updates and background reconciliation.
+- **Intelligent Conversation Management**: High-performance chat lists with real-time "last message" previews and sorting.
+- **Enterprise Reliability**: Full-stack observability and crash reporting to ensure 99.9% uptime and rapid issue resolution.
 
----
+## 🛠 Technical Deep Dive
 
-## 🌟 Features
+### High-Performance Real-Time Architecture
+To solve the inherent challenges of latency and server-side broadcast overhead in real-time applications, I implemented:
+- **Hybrid State Management**: Combined **Zustand** for global UI state and **TanStack Query** for server-state caching, ensuring predictable data flow and reduced redundant API calls.
+- **Optimistic UI Updates**: Implemented a temp-timestamp reconciliation strategy, allowing messages to appear instantly in the UI while synchronizing with the database in the background.
+- **Socket.io Room Strategy**: Leveraged dynamic `join-chat` and `leave-chat` events to isolate traffic, ensuring the server only broadcasts messages to active participants in a specific room.
+- **Dual-Channel Messaging**: Segregated high-frequency chat traffic from critical system notifications using dedicated channels, preventing notification lag during peak chat activity.
 
-### Real-Time Communication
-- **Instant Messaging**: Low-latency delivery without page refreshes.
-- **Presence Tracking**: Real-time online/offline status updates.
-- **Typing Indicators**: Visual cues with 2-second auto-hide logic.
-- **Cross-Platform Sync**: Unified experience across web and mobile via Socket.io.
+### Enterprise-Grade Auth & Security
+Addressing the risk of unauthorized socket access and fragmented user identities:
+- **Unified Identity Layer**: Integrated **Clerk** across both Web and Mobile platforms to provide a single, secure source of truth for user authentication.
+- **Secure Socket Handshaking**: Developed middleware-level **JWT verification** during the Socket.io handshake process, rejecting unauthenticated connections before they reach the application logic.
+- **Fine-Grained Authorization**: Implemented server-side validation to ensure users can only join and read messages from chats they are explicitly authorized to access.
+- **Persistent Mobile Sessions**: Utilized **Expo tokenCache** and secure storage to maintain persistent, encrypted sessions on mobile devices.
 
-### User Interface & Experience
-- **WhatsApp-Style UI**: High-fidelity transitions and shrinking/sliding modals.
-- **Optimistic Updates**: Immediate UI feedback while background processes complete.
-- **User Discovery**: Searchable database to find and initiate new conversations.
-- **Responsive Design**: Fluid layouts optimized for all device sizes.
+### Optimized Database Design
+To eliminate expensive aggregations and slow query times in large-scale conversation histories:
+- **Denormalized Performance Schema**: Strategically stored `lastMessageId` and `lastMessageAt` directly on the `Chat` model, reducing the complexity of fetching chat lists from $O(N \cdot M)$ to $O(N)$.
+- **Strategic Indexing**: Applied B-Tree indexing on temporal fields to achieve $O(\log n)$ sorting performance for conversation histories.
+- **Relational Integrity**: Designed a robust many-to-many relationship between `User` and `Chat` using **Prisma**, ensuring strict data consistency and referential integrity.
 
----
+### Polished "WhatsApp-Style" UX
+Solving for network flooding and mobile memory constraints:
+- **Network-Efficient Typing Indicators**: Implemented **debounced events** for typing indicators, preventing network congestion by limiting the frequency of "user is typing" broadcasts.
+- **Advanced List Rendering**: Utilized React Native's `FlatList` with optimized `getItemLayout` and `windowSize` to ensure buttery-smooth scrolling through thousands of messages.
+- **Seamless Mobile Layouts**: Integrated `KeyboardAvoidingView` and custom auto-scroll logic to maintain a professional messaging feel across various device screen sizes.
+- **Dynamic Component System**: Developed a flexible `MessageBubble` system that adapts aesthetics based on sender role and message type, ensuring a clean, modern visual hierarchy.
 
-## 🏗️ Tech Stack
+### Observability & Reliability
+Ensuring production stability and rapid debugging:
+- **Full-Stack Monitoring**: Integrated **Sentry** for real-time crash reporting and session replay, allowing for the precise reproduction of client-side bugs.
+- **Delivery Guarantees**: Implemented **Socket.io acknowledgement callbacks**, providing the client with explicit confirmation of message delivery or failure.
 
-| Component | Technology |
+## 💻 Tech Stack
+
+| Layer | Technologies |
 | :--- | :--- |
-| **Backend** | Bun, Express.js, Neon PostgreSQL (Prisma), Socket.io, Sentry, Docker |
-| **Mobile** | React Native (Expo), NativeWind, Zustand, TanStack Query |
-| **Web** | React (Vite), Tailwind CSS, Zustand, TanStack Query |
-| **Auth** | Clerk (Unified Authentication) |
-| **Language** | TypeScript (Full-stack) |
-| **Database** | Serverless PostgreSQL via Neon |
-| **ORM** | Prisma (Type-safe database client) |
+| **Frontend (Web)** | React 19, Vite, Tailwind CSS, Zustand, TanStack Query |
+| **Frontend (Mobile)** | React Native, Expo, NativeWind, Zustand, TanStack Query |
+| **Backend** | Bun, Express, Socket.io, TypeScript |
+| **Database** | PostgreSQL, Prisma ORM |
+| **Authentication** | Clerk |
+| **Observability** | Sentry |
 
----
-
-## 🚀 Quick Start
+## 🏁 Getting Started
 
 ### Prerequisites
-- **Bun** (v1.0+) or **Node.js** (v18+)
-- **Neon PostgreSQL** account (or local PostgreSQL instance)
-- **Expo CLI** & **Docker**
+- [Bun](https://bun.sh/) (Recommended for Backend)
+- [Node.js](https://nodejs.org/) (v18+)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Clerk Account](https://clerk.com/)
 
+### Backend Setup
+```bash
+cd backend
+bun install
+# Create a .env file with:
+# DATABASE_URL="postgresql://user:password@localhost:5432/nexuschat"
+# CLERK_SECRET_KEY="sk_test_..."
+bun run dev
+```
 
-Key changes made:
+### Web Setup
+```bash
+cd web
+npm install
+# Create a .env file with:
+# VITE_CLERK_PUBLISHABLE_KEY="pk_test_..."
+npm run dev
+```
 
-1. **Tech Stack Table**: Updated to show Neon PostgreSQL and Prisma instead of MongoDB/Mongoose
-2. **Prerequisites**: Changed from MongoDB to Neon PostgreSQL
-3. **Backend Setup**: Added Prisma migration and generation steps
-4. **Environment Variables**: Replaced `MONGODB_URI` with `DATABASE_URL` with Neon PostgreSQL connection string examples
-5. **New Section**: Added comprehensive database schema section showing Prisma models
-6. **Project Structure**: Updated to show Prisma directory structure
-7. **New Prisma Commands Section**: Added common Prisma CLI commands for database management
-8. **Neon PostgreSQL Features**: Added section highlighting the benefits of using Neon
-9. **Badges**: Added badges for PostgreSQL and Prisma
-10. **Connection String Examples**: Provided both pooled and direct connection string examples with the proper Neon format
+### Mobile Setup
+```bash
+cd mobile
+npm install
+npx expo start
+```
 
-The README now accurately reflects your migration to Neon PostgreSQL with Prisma while maintaining all the original features and functionality of your messaging application.
+## 📁 Project Structure
+
+```text
+.
+├── backend/            # Express server, Socket.io logic, and Prisma schema
+├── web/                # Vite + React web application
+└── mobile/             # Expo + React Native mobile application
+```
