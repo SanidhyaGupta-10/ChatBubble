@@ -69,11 +69,25 @@ export const initializeSocket = (httpServer: HttpServer) => {
 
         socket.join(`user:${userId}`);
 
-        socket.on("join-chat", (payload: string | { chatId: string }) => {
+        socket.on("join-chat", async (payload: string | { chatId: string }) => {
             const chatId = typeof payload === "string" ? payload : payload.chatId;
             if(!chatId) return;
 
-            socket.join(`chat:${chatId}`);
+            try {
+                const chat = await prisma.chat.findUnique({
+                    where: { id: chatId },
+                    include: { participants: true }
+                });
+
+                if(!chat || !chat.participants.some(p => p.id === userId)){
+                    console.error(`Unauthorized join attempt: User ${userId} tried to join chat ${chatId}`);
+                    return;
+                }
+
+                socket.join(`chat:${chatId}`);
+            } catch (error) {
+                console.error("Error during join-chat:", error);
+            }
         });
         socket.on("leave-chat", (payload: string | { chatId: string }) => {
             const chatId = typeof payload === "string" ? payload : payload.chatId;
@@ -131,7 +145,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
                 const serializedMessage = serializeMessage(message);
 
                 io.to(`chat:${chatId}`).emit("new-message", serializedMessage);
-                ack?.();
+                ack?.(null, serializedMessage);
 
                 // For real-time updates when user is not in the chat screen
                 for(const participant of chat.participants){
@@ -175,7 +189,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
                     }
                 }
             } catch (error) {
-                // Ignore silent typing errors
+                console.error("Socket typing event error:", error);
             }
 
         });

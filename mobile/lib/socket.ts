@@ -9,7 +9,7 @@ interface SocketState {
   socket: Socket | null;
   isConnected: boolean;
   onlineUsers: Set<string>;
-  typingUsers: Map<string, string>;
+  typingUsers: Map<string, Set<string>>;
   unreadChats: Set<string>;
   currentChatId: string | null;
   queryClient: QueryClient | null;
@@ -30,7 +30,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   socket: null,
   isConnected: false,
   onlineUsers: new Set(),
-  typingUsers: new Map(),
+  typingUsers: new Map<string, Set<string>>(),
   unreadChats: new Set(),
   currentChatId: null,
   queryClient: null,
@@ -38,7 +38,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   connect: (token, queryClient) => {
     const existing = get().socket;
     if (existing?.connected) return;
-    existing?.disconnect();
+    if (existing) existing.disconnect();
 
     const socket = io(SOCKET_URL, { auth: { token } });
 
@@ -78,7 +78,12 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     socket.on("typing", ({ userId, chatId, isTyping }) => {
       set((s) => {
         const typingUsers = new Map(s.typingUsers);
-        isTyping ? typingUsers.set(chatId, userId) : typingUsers.delete(chatId);
+        const userSet = new Set(typingUsers.get(chatId) || []);
+        isTyping ? userSet.add(userId) : userSet.delete(userId);
+
+        if (userSet.size === 0) typingUsers.delete(chatId);
+        else typingUsers.set(chatId, userSet);
+
         return { typingUsers };
       });
     });
@@ -120,7 +125,12 @@ export const useSocketStore = create<SocketState>((set, get) => ({
 
       set((s) => {
         const typingUsers = new Map(s.typingUsers);
-        typingUsers.delete(message.chat);
+        const userSet = typingUsers.get(message.chat);
+        if (userSet) {
+          userSet.delete(senderId);
+          if (userSet.size === 0) typingUsers.delete(message.chat);
+          else typingUsers.set(message.chat, userSet);
+        }
         return {
           typingUsers,
           unreadChats:
@@ -140,7 +150,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       socket: null,
       isConnected: false,
       onlineUsers: new Set(),
-      typingUsers: new Map(),
+      typingUsers: new Map<string, Set<string>>(),
       unreadChats: new Set(),
       currentChatId: null,
       queryClient: null,
@@ -181,13 +191,24 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       optimistic,
     ]);
 
-    socket.emit("send-message", { chatId, text }, (err : { message: string }) => {
+    socket.emit("send-message", { chatId, text }, (err : { message: string } | null, message?: Message) => {
       if (err) {
         queryClient.setQueryData<Message[]>(
           ["messages", chatId],
           (old = []) => old.filter((m) => m._id !== tempId)
         );
         Sentry.logger.error("Send failed", err);
+        return;
+      }
+
+      if (message) {
+        queryClient.setQueryData<Message[]>(
+          ["messages", chatId],
+          (old = []) => {
+            const filtered = old.filter((m) => m._id !== tempId);
+            return [...filtered, message];
+          }
+        );
       }
     });
   },

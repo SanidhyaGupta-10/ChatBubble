@@ -48,7 +48,7 @@ export async function getMessages(req: AuthRequest, res: Response, next:NextFunc
             skip: cursor ? 1 : 0,
         });
 
-        const nextCursor = messages.length === limit ? messages[messages.length - 1].id : null;
+        const nextCursor = messages.length === limit ? messages[messages.length - 1]?.id : null;
 
         res.json({
             messages: messages.map(serializeMessage),

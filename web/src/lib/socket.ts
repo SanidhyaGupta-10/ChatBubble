@@ -103,7 +103,7 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
       ({ userId, chatId, isTyping }: { userId: string; chatId: string; isTyping: boolean }) => {
         set((state) => {
           const typingUsers = new Map(state.typingUsers);
-          const userSet = typingUsers.get(chatId) || new Set();
+          const userSet = new Set(typingUsers.get(chatId) || []);
           if (isTyping) userSet.add(userId);
           else userSet.delete(userId);
 

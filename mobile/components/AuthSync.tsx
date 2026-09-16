@@ -1,19 +1,20 @@
 import { useAuthCallback } from "@/hooks/useAuth";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Sentry from '@sentry/react-native';
 
 const AuthSync = () => {
     const { isSignedIn } = useAuth();
     const { user } = useUser();
     const { mutate: syncUser } = useAuthCallback();
-    const hasSynced = useRef(false); // this is used to not run useEffect more than once
+    const hasSynced = useRef(false);
+    const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
         if (isSignedIn && user && !hasSynced.current) {
-            hasSynced.current = true;
             syncUser(undefined, {
                 onSuccess: (data) => {
+                    hasSynced.current = true;
                     Sentry.logger.info(Sentry.logger.fmt`User synced ${data.name}`, {
                         userId: user.id,
                         userName: data.name,
@@ -24,15 +25,21 @@ const AuthSync = () => {
                         userId: user.id,
                         error: error instanceof Error ? error.message : String(error),
                     });
+
+                    if (retryCount < 3) {
+                        setTimeout(() => {
+                            setRetryCount(prev => prev + 1);
+                        }, 5000 * (retryCount + 1));
+                    }
                 }
             });
         }
 
         if(!isSignedIn){
-            hasSynced.current = false;;
+            hasSynced.current = false;
         }
 
-    }, [isSignedIn, user, syncUser])
+    }, [isSignedIn, user, syncUser, retryCount])
 
     return null;
 }
